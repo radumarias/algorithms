@@ -1,7 +1,7 @@
 use std::cell::UnsafeCell;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 
@@ -26,7 +26,7 @@ fn main() {
 #[derive(Debug)]
 struct SpinLock<T: Debug> {
     inner: UnsafeCell<T>,
-    lock: AtomicU32,
+    lock: AtomicBool,
 }
 
 unsafe impl Send for SpinLock<u32> {}
@@ -36,7 +36,7 @@ impl<T: Debug> SpinLock<T> {
     const fn new(inner: T) -> Self {
         Self {
             inner: UnsafeCell::new(inner),
-            lock: AtomicU32::new(0),
+            lock: AtomicBool::new(false),
         }
     }
 
@@ -44,8 +44,7 @@ impl<T: Debug> SpinLock<T> {
         loop {
             if self
                 .lock
-                .compare_exchange(0, 42, Ordering::SeqCst, Ordering::SeqCst)
-                .is_ok()
+                .swap(true, Ordering::SeqCst)
             {
                 break;
             }
@@ -62,7 +61,7 @@ impl<T: Debug> SpinLock<T> {
 #[derive(Debug)]
 struct LockGuard<'a, T> {
     inner: &'a UnsafeCell<T>,
-    lock: &'a AtomicU32,
+    lock: &'a AtomicBool,
 }
 
 impl Deref for LockGuard<'_, u32> {
@@ -80,6 +79,6 @@ impl DerefMut for LockGuard<'_, u32> {
 
 impl<T> Drop for LockGuard<'_, T> {
     fn drop(&mut self) {
-        self.lock.store(0, Ordering::SeqCst);
+        self.lock.store(false, Ordering::SeqCst);
     }
 }
