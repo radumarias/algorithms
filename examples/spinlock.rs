@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
+use rand::{Rng, thread_rng};
 
 static VAR: SpinLock<u32> = SpinLock::new(0);
 
@@ -11,10 +12,10 @@ fn main() {
     let mut handles = vec![];
     for _ in 1..=5 {
         handles.push(thread::spawn(move || {
+            thread::sleep(Duration::from_millis(thread_rng().gen_range(0..1000)));
             let mut lock = VAR.lock();
             *lock = *lock + 1;
             println!("{:?}", *lock);
-            thread::sleep(Duration::from_secs(1));
         }));
     }
 
@@ -48,7 +49,7 @@ impl<T: Debug> SpinLock<T> {
             {
                 break;
             }
-            thread::sleep(Duration::from_millis(1));
+            thread::yield_now();
         }
 
         LockGuard {
