@@ -43,7 +43,7 @@ impl<T: Debug> SpinLock<T> {
 
     fn lock(&self) -> LockGuard<'_, T> {
         loop {
-            if self
+            if !self
                 .lock
                 .swap(true, Ordering::SeqCst)
             {
