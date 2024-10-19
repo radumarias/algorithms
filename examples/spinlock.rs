@@ -30,8 +30,8 @@ struct SpinLock<T: Debug> {
     lock: AtomicBool,
 }
 
-unsafe impl Send for SpinLock<u32> {}
-unsafe impl Sync for SpinLock<u32> {}
+unsafe impl<T: Debug> Send for SpinLock<T> {}
+unsafe impl<T: Debug> Sync for SpinLock<T> {}
 
 impl<T: Debug> SpinLock<T> {
     const fn new(inner: T) -> Self {
@@ -53,33 +53,31 @@ impl<T: Debug> SpinLock<T> {
         }
 
         LockGuard {
-            inner: &self.inner,
-            lock: &self.lock,
+            rf: &self,
         }
     }
 }
 
 #[derive(Debug)]
-struct LockGuard<'a, T> {
-    inner: &'a UnsafeCell<T>,
-    lock: &'a AtomicBool,
+struct LockGuard<'a, T: Debug> {
+    rf: &'a SpinLock<T>,
 }
 
-impl Deref for LockGuard<'_, u32> {
-    type Target = u32;
+impl<T: Debug> Deref for LockGuard<'_, T> {
+    type Target = T;
     fn deref(&self) -> &Self::Target {
-        unsafe { &(*self.inner.get()) }
+        unsafe { &(*self.rf.inner.get()) }
     }
 }
 
-impl DerefMut for LockGuard<'_, u32> {
+impl<T: Debug> DerefMut for LockGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut (*self.inner.get()) }
+        unsafe { &mut (*self.rf.inner.get()) }
     }
 }
 
-impl<T> Drop for LockGuard<'_, T> {
+impl<T: Debug> Drop for LockGuard<'_, T> {
     fn drop(&mut self) {
-        self.lock.store(false, Ordering::SeqCst);
+        self.rf.lock.store(false, Ordering::SeqCst);
     }
 }
