@@ -4,7 +4,6 @@ use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
-use rand::{Rng, thread_rng};
 
 static VAR: SpinLock<u32> = SpinLock::new(0);
 
