@@ -8,3 +8,4 @@ tailcall = "1.0.1"
 rand = "0.8.5"
 serde_json = "1.0.132"
 serde = { version = "1.0.211", features = ["derive"] }
+tokio = { version = "1.41.0", features = ["rt", "rt-multi-thread", "macros", "time"] }
