@@ -45,7 +45,7 @@ impl<T: Debug> SpinLock<T> {
         loop {
             if !self
                 .lock
-                .swap(true, Ordering::SeqCst)
+                .swap(true, Ordering::Acquire)
             {
                 break;
             }
@@ -78,6 +78,6 @@ impl<T: Debug> DerefMut for LockGuard<'_, T> {
 
 impl<T: Debug> Drop for LockGuard<'_, T> {
     fn drop(&mut self) {
-        self.rf.lock.store(false, Ordering::SeqCst);
+        self.rf.lock.store(false, Ordering::Release);
     }
 }
