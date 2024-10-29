@@ -3,19 +3,21 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
+use std::sync::Arc;
 use std::time::Duration;
 use rand::{Rng, thread_rng};
 
-static VAR: SpinLock<u32> = SpinLock::new(0);
-
 fn main() {
+    let spin_lock = Arc::new(SpinLock::new(0));
+
     let mut handles = vec![];
     for _ in 1..=5 {
+        let cloned = spin_lock.clone();
         handles.push(thread::spawn(move || {
-            thread::sleep(Duration::from_millis(thread_rng().gen_range(500..3000)));
-            let mut lock = VAR.lock();
-            *lock = *lock + 1;
-            println!("{:?}", *lock);
+            let mut guard = cloned.lock();
+            *guard = *guard + 1;
+            println!("{:?}", *guard);
+            thread::sleep(Duration::from_millis(thread_rng().gen_range(42..1024)));
         }));
     }
 
@@ -25,13 +27,12 @@ fn main() {
 }
 
 #[derive(Debug)]
-struct SpinLock<T: Debug> {
+pub struct SpinLock<T: Debug> {
     inner: UnsafeCell<T>,
     lock: AtomicBool,
 }
 
-unsafe impl<T: Debug> Send for SpinLock<T> {}
-unsafe impl<T: Debug> Sync for SpinLock<T> {}
+unsafe impl Sync for SpinLock<u32> {}
 
 impl<T: Debug> SpinLock<T> {
     const fn new(inner: T) -> Self {
@@ -53,31 +54,31 @@ impl<T: Debug> SpinLock<T> {
         }
 
         LockGuard {
-            rf: &self,
+            inner: &self,
         }
     }
 }
 
 #[derive(Debug)]
-struct LockGuard<'a, T: Debug> {
-    rf: &'a SpinLock<T>,
+pub struct LockGuard<'a, T: Debug> {
+    inner: &'a SpinLock<T>,
 }
 
-impl<T: Debug> Deref for LockGuard<'_, T> {
-    type Target = T;
+impl Deref for LockGuard<'_, u32> {
+    type Target = u32;
     fn deref(&self) -> &Self::Target {
-        unsafe { &(*self.rf.inner.get()) }
+        unsafe { &(*self.inner.inner.get()) }
     }
 }
 
-impl<T: Debug> DerefMut for LockGuard<'_, T> {
+impl DerefMut for LockGuard<'_, u32> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut (*self.rf.inner.get()) }
+        unsafe { &mut (*self.inner.inner.get()) }
     }
 }
 
 impl<T: Debug> Drop for LockGuard<'_, T> {
     fn drop(&mut self) {
-        self.rf.lock.store(false, Ordering::Release);
+        self.inner.lock.store(false, Ordering::Release);
     }
 }
