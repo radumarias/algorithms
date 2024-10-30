@@ -9,3 +9,53 @@ rand = "0.8.5"
 serde_json = "1.0.132"
 serde = { version = "1.0.211", features = ["derive"] }
 tokio = { version = "1.41.0", features = ["rt", "rt-multi-thread", "macros", "time"] }
+criterion = "0.5.1"
+parking_lot = "0.12.3"
+
+[[bench]]
+name = "spinlock_lock_benchmark"
+harness = false
+
+[[bench]]
+name = "spinlock_lock_set_benchmark"
+harness = false
+
+[[bench]]
+name = "mutex_lock_benchmark"
+harness = false
+
+[[bench]]
+name = "mutex_lock_set_benchmark"
+harness = false
+
+[[bench]]
+name = "rwlock_read_benchmark"
+harness = false
+
+[[bench]]
+name = "rwlock_write_benchmark"
+harness = false
+
+[[bench]]
+name = "rwlock_write_set_benchmark"
+harness = false
+
+[[bench]]
+name = "parking_lot_mutex_lock_benchmark"
+harness = false
+
+[[bench]]
+name = "parking_lot_mutex_lock_set_benchmark"
+harness = false
+
+[[bench]]
+name = "parking_lot_rwlock_read_benchmark"
+harness = false
+
+[[bench]]
+name = "parking_lot_rwlock_write_benchmark"
+harness = false
+
+[[bench]]
+name = "parking_lot_rwlock_write_set_benchmark"
+harness = false
