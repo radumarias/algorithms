@@ -1,4 +1,6 @@
 use std::collections::BTreeMap;
+use std::env::args;
+use std::process::exit;
 
 #[derive(Default)]
 struct HistoricalDataStore {
@@ -30,7 +32,33 @@ impl HistoricalDataStore {
     }
 }
 
-fn main() {}
+fn main() {
+    let args: Vec<String> = args().collect();
+    if args.len() < 2 {
+        println!("Usage: {} <key>", args[0]);
+        return;
+    }
+    let key = &args[1];
+    let v = &args[2];
+    let v = v.parse::<u64>().unwrap();
+
+    let mut store = HistoricalDataStore::default();
+
+    store.record("report", "initial", 2);   // save "report" with "initial" at time 2.
+    store.record("report", "updated", 5);   // save "report" with "updated" at time 5.
+    store.record("report", "final", 7);     // save "report" with "final" at time 7.
+
+    // compare the key with "report" with match
+    match key {
+        key if key == "report" => {
+            if let Some(v) = store.retrieve(key, v) { println!("{v}") } else { println!("None") }
+        }
+        _ => {
+            eprintln!("Invalid key");
+            exit(1);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
