@@ -1,32 +1,36 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
+use std::fmt::Debug;
 use std::io;
 use std::io::Read;
 
 #[derive(Default, Debug)]
-struct HistoricalDataStore<K: Sized + Ord, V: Sized + Ord> {
+struct HistoricalDataStore<K: Sized + Ord + Debug, V: Sized + Ord + Debug> {
     map: BTreeMap<K, BTreeMap<u64, V>>,
 }
 
-impl<K: Sized + Ord, V: Sized + Ord> HistoricalDataStore<K, V> {
+impl<K: Sized + Ord + Debug, V: Sized + Ord + Debug> HistoricalDataStore<K, V> {
     fn record(&mut self, key: K, value: V, time: u64) {
-        self.map
-            .entry(key)
-            .or_default()
-            .entry(time)
-            .or_insert(value);
+        let entry = self.map.entry(key).or_default();
+
+        if let Some(existing_value) = entry.get_mut(&time) {
+            *existing_value = value; // Update the existing value
+        } else {
+            entry.insert(time, value); // Insert the new value if it doesn't exist
+        }
     }
 
     fn retrieve<Q: Borrow<K> + Ord>(&self, key: Q, mut time: u64) -> Option<&V> {
-        // lookup by key
-        if !self.map.contains_key(key.borrow()) {
-            return None;
-        }
         // optimize with binary search
         loop {
-            // lookup closest smaller version
-            if let Some(v) = self.map.get(key.borrow()).unwrap().get(&time) {
-                return Some(v);
+            // lookup by key
+            if let Some(map) = self.map.get(key.borrow()) {
+                // lookup closest smaller version
+                if let Some(v) = map.get(&time) {
+                    return Some(v);
+                }
+            } else {
+                return None;
             }
             time -= 1;
             if time == 0 {
@@ -101,12 +105,14 @@ mod tests {
         store.record("report".to_string(), "updated".to_string(), 5); // save "report" with "updated" at time 5.
         store.record("report".to_string(), "final".to_string(), 7); // save "report" with "final" at time 7.
 
+        store.record("report".to_string(), "initial2".to_string(), 2);
+
         assert_eq!(
             Some(&"updated".to_string()),
             store.retrieve("report".to_string(), 6)
         ); // return "updated" (since the closest prior time is 5).
         assert_eq!(
-            Some(&"initial".to_string()),
+            Some(&"initial2".to_string()),
             store.retrieve("report".to_string(), 2)
         ); // return "initial"
         assert_eq!(
