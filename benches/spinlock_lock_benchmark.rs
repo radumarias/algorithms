@@ -1,7 +1,7 @@
+use criterion::{criterion_group, criterion_main, Criterion};
 use std::sync::Arc;
-use criterion::{Criterion, criterion_group, criterion_main};
 
-use algorithms::spinlock::SpinLock;
+use add_two_numbers::spinlock::SpinLock;
 
 fn spinlock_benchmark(c: &mut Criterion) {
     let spin_lock = Arc::new(SpinLock::new(0));
