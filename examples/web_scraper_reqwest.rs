@@ -80,5 +80,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Cleaning up...");
     fs::remove_dir_all(path)?;
 
+    println!("Stopping runtime...");
+
     Ok(())
 }
