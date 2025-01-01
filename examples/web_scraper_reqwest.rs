@@ -43,7 +43,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let handle = tokio::spawn(async move {
             let response = client2.get(url).send().await?;
             // let response = reqwest::get(url).await?;
-            // let response = reqwest::get(url).await?;
             let todo: Todo = response.json().await?;
             // println!("{todo:?}");
 
