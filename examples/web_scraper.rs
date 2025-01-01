@@ -14,17 +14,24 @@ struct Todo {
 async fn main() -> Result<(), Box<dyn Error>> {
     let count = 500;
 
+    let url = "https://jsonplaceholder.typicode.com/todos/1";
+
+    // Build a Reqwest client with certificate validation disabled.
+    // This is insecure in production!
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true) // <-- Disables certificate validation
+        // .danger_accept_invalid_hostnames(true) // (Optional) Disable hostname verification
+        .build()?;
+
     // 2. Measure the total time
     let start_time = Instant::now();
-
-    let url = "https://jsonplaceholder.typicode.com/todos/1";
 
     // Spawn concurrent tasks
     let mut tasks = Vec::with_capacity(1000);
     for i in 1..=count {
         let url_clone = url.to_string();
         let handle = tokio::spawn(async move {
-            let response = reqwest::get(&url_clone).await?;
+            let response = client.get(&url_clone).await?;
             let todo: Todo = response.json().await?;
             // println!("{todo:?}");
 
