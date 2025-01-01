@@ -13,6 +13,9 @@ criterion = "0.5.1"
 parking_lot = "0.12.3"
 reqwest = { version = "0.12.12", features = ["json"] }
 serde_derive = "1.0.211"
+hyper = { version = "1", features = ["full"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["full"] }
 
 [[bench]]
 name = "spinlock_lock_benchmark"
