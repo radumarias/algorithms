@@ -14,13 +14,14 @@ struct Todo {
 async fn main() -> Result<(), Box<dyn Error>> {
     let count = 500;
 
-    let url = "https://jsonplaceholder.typicode.com/todos/1";
+    let url = "http://jsonplaceholder.typicode.com/todos/1";
 
     // Build a Reqwest client with certificate validation disabled.
     // This is insecure in production!
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true) // <-- Disables certificate validation
-        // .danger_accept_invalid_hostnames(true) // (Optional) Disable hostname verification
+        .redirect(reqwest::redirect::Policy::none())
+        .danger_accept_invalid_hostnames(true) // (Optional) Disable hostname verification
         .build()?;
 
     // 2. Measure the total time
