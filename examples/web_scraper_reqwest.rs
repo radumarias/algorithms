@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("{:?} req/s", count as f32 / duration.as_secs_f32());
 
     println!("Cleaning up...");
-    // fs::remove_dir_all(path)?;
+    fs::remove_dir_all(path)?;
 
     Ok(())
 }
